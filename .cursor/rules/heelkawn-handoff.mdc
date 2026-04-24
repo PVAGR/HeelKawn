@@ -1,0 +1,10 @@
+---
+description: Read and maintain HeelKawn project handoff so every session knows project state
+alwaysApply: true
+---
+
+# HeelKawn session memory
+
+- **At the start** of work in this repository: read `HEELKAWN_HANDOFF.md` in the project root to see goals, where we left off, and recent changes.
+- **After** meaningful code or scene changes: update that file’s **Where we left off** and add a one-line entry to **Changelog** (date + what changed). Keep updates short.
+- Prefer editing `HEELKAWN_HANDOFF.md` over relying on chat history; chats do not carry across sessions automatically.
