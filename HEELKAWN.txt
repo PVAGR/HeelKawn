@@ -1,0 +1,55 @@
+================================================================================
+HEELKAWN — REMEMBER THIS FOR THE PROJECT
+================================================================================
+
+This text file is so we always know where we left off. The AI (and you) should
+READ this at the start of a session. After every time the project is updated
+(code, scenes, or behavior), WRITE a new line in the LOG at the bottom and
+update the WHERE WE LEFT OFF section. Chat history does not carry over — this file does.
+
+What you asked for: a text, for HeelKawn, so it’s remembered, it works, you
+ always know where we left off, and it’s updated every time we change things.
+
+================================================================================
+WHAT THE PROJECT IS
+================================================================================
+
+HeelKawn — Godot 4 colony / RimWorld-style sim: map, pawns, jobs, stockpiles,
+building (bed, wall, door, zone), day/night, save (F5) / load (F8).
+
+Main: scenes/main/Main.tscn   scenes/main/Main.gd
+UI:  ColonyHUD, BuildToolbar, PawnInfoPanel
+
+================================================================================
+WHERE WE LEFT OFF  (update this when status changes)
+================================================================================
+
+Last updated: 2026-04-24
+
+Recent:
+- Build/zone preview uses BuildPreviewOverlay (after World) so preview is visible.
+- Build toolbar: strong “selected” look for active tool; Save [F5] / Load [F8] in bar.
+
+Open / next:
+- (put next tasks, bugs, or goals here)
+
+Rules:
+- Main.DesignationMode and BuildToolbar MODE_* (0-4) must match.
+- New BuildToolbar signals → connect in Main._ready().
+
+================================================================================
+LOG (newest at top)
+================================================================================
+
+2026-04-24  Single handoff file HEELKAWN.txt only; rule points here; user asked
+            for a text, read every session, update every project change.
+2026-04-24  HEELKAWN handoff + Cursor rule; BuildPreviewOverlay; toolbar save/
+            load; build button styles.
+
+================================================================================
+INSTRUCTIONS FOR THE AI
+================================================================================
+
+1) Start: read HEELKAWN.txt first when working in this repo.
+2) After you change the project: update WHERE WE LEFT OFF and add a line to LOG.
+3) Keep entries short.
