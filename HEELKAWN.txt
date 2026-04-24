@@ -24,40 +24,39 @@ UI:  ColonyHUD, BuildToolbar, PawnInfoPanel
 WHERE WE LEFT OFF  (update this when status changes)
 ================================================================================
 
-Last updated: 2026-04-24 (Session 2 Complete)
+Last updated: 2026-04-24 (Session 3 Complete)
 
-Session 2 — Traits System (✓ COMPLETE):
-✅ Created Trait.gd with 20 unique trait types
-✅ Traits modify: hunger decay, rest decay, mood decay, health max, skill XP, work speed, injury chance, damage taken
-✅ Pawn data integrated with trait save/load serialization
-✅ Traits spawn with pawns at game start (0-2 random traits per pawn)
-✅ UI display in PawnInfoPanel showing pawn traits
-✅ Need decay multipliers applied each tick
-✅ Skill XP multipliers applied per work tick
-✅ Work speed multipliers applied in effective_labor_mult()
-✅ Mining hazards now scale with injury/damage traits
+Session 3 — Animal AI (✓ COMPLETE):
+✅ Created Animal.gd with rabbits and deer species
+✅ Animals spawn initially (8 rabbits, 4 deer) on forest/plains biomes
+✅ Movement: Random wandering with A* pathfinding within vision range
+✅ Foraging: Animals eat forage on forest/plains tiles and increase hunger
+✅ Breeding: Well-fed animals reproduce on nearby empty tiles
+✅ Flocking: Animals track nearby animals of same species for breeding
+✅ Death: Animals starve (hunger <= 0) and drop meat into stockpile
+✅ Meat production: Rabbits drop 2 meat, Deer drop 5 meat (Item.Type.MEAT)
+✅ AnimalSpawner: Manages population, respawn, initial spawn
+✅ Hunting jobs: Posted dynamically each tick for live animals
+✅ Pawn integration: Pawns can hunt animals with work_hunt toggle
+✅ Job completion: Hunting jobs work with existing job system
 
-Trait list (20 total):
-- Physical: Workhorse, Lazy, Tough, Frail
-- Mental: Quick Learner, Slow Learner, Focused, Easily Bored
-- Social: Optimist, Pessimist, Social, Loner
-- Hunger: Iron Stomach, Eats Like a Bird
-- Rest: Night Owl, Early Bird
-- Hazard: Unlucky, Lucky, Reckless, Cautious
+Animal species data:
+- **Rabbit**: 40px/s speed, 60 vision range, 2 meat, breeds faster (600 tick cooldown)
+- **Deer**: 60px/s speed, 100 vision range, 5 meat, breeds slower (900 tick cooldown)
+- Both species: Hunger decay, forage-seeking, territory-based wandering
 
-Session 3 — Animal AI (⏳ NEXT):
+Session 4 — Mood Events (⏳ NEXT):
 Goals:
-- Add rabbits and deer to the world map (spawn at random locations)
-- Implement basic movement (random walk within territory)
-- Add simple flocking/herding behavior (animals attracted to each other)
-- Natural breeding/respawn system (reproduction when food available)
-- Hunting jobs: pawns with HUNT work enabled can hunt animals for meat
-- Animal corpses drop meat into nearby stockpile
+- Implement mood triggers (joy from good food, sadness from death, stress from combat)
+- Create mood-decay multipliers and thresholds
+- Add crisis cascade (low morale leads to work strikes, social conflicts)
+- UI feedback: Show mood status with visual indicators
+- Pawn behavior affected by mood: work efficiency, violence potential
 
 Session 1-8 Roadmap:
 1: ✅ Death Mechanics (starvation, exhaustion, injury, mining hazards)
 2: ✅ Traits System (20 traits, multipliers, UI display)
-3: 🔲 Animal AI (rabbits, deer, flocking, breeding, hunting)
+3: ✅ Animal AI (rabbits, deer, flocking, breeding, hunting)
 4: 🔲 Mood Events (triggers, crises, feedback UI)
 5: 🔲 Combat & Raiding (enemies, draft mode, injuries, loot)
 6: 🔲 Pawn Visuals & Audio (sprites, animations, SFX)
@@ -65,7 +64,8 @@ Session 1-8 Roadmap:
 8: 🔲 Polish & QoL (job filters, pawn scheduler, mini-map, perf, bugs)
 
 Open / next:
-- Ready to begin Session 3 Animal AI system.
+- AnimalSpawner node must be added to Main.tscn in scene editor
+- Ready to begin Session 4 Mood Events system.
 
 Rules:
 - Main.DesignationMode and BuildToolbar MODE_* (0-4) must match.
