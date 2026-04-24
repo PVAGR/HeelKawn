@@ -42,6 +42,8 @@ Rules:
 LOG (newest at top)
 ================================================================================
 
+2026-04-24  Added GIT_TROUBLESHOOTING.txt; ran gh auth setup-git so Git uses GitHub
+            login (helps when IDE push fails). If push still fails, read that file.
 2026-04-24  Created GitHub repo PVAGR/HeelKawn, added origin, pushed all commits.
 2026-04-24  Single handoff file HEELKAWN.txt only; rule points here; user asked
             for a text, read every session, update every project change.

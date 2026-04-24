@@ -1,0 +1,44 @@
+================================================================================
+HEEKAWN / GIT — IF PUSH OR COMMIT “WON’T WORK”
+================================================================================
+
+From a terminal, use THIS folder (must contain a .git folder):
+  c:\Users\user\OneDrive\Desktop\HeelKawn
+
+1) Open PowerShell or CMD, then:
+   cd c:\Users\user\OneDrive\Desktop\HeelKawn
+   dir .git
+   (If you get “file not found”, you are in the wrong directory.)
+
+2) See what Git thinks:
+   git status
+   git remote -v
+   (origin should be https://github.com/PVAGR/HeelKawn.git)
+
+3) Commit (after you SAVE all files in the editor)
+   git add -A
+   git status
+   git commit -m "Describe what you changed"
+
+4) Push
+   git push -u origin master
+
+5) If GitHub asks for login or “authentication failed”:
+   gh auth login
+   (pick GitHub.com, HTTPS, login in browser)
+   Then try again:
+   git push
+
+   Optional: wire Git to use the same login as the GitHub app:
+   gh auth setup-git
+
+6) If the push is “rejected” (remote has commits you do not have):
+   git pull --rebase origin master
+   git push
+
+7) If Cursor/VS Code shows nothing to commit but you changed files:
+   - Save the file (Ctrl+S)
+   - Check you are not in a subfolder with a different .git
+   - OneDrive: wait for sync; if .git is locked, close other apps and retry
+
+Remote URL: https://github.com/PVAGR/HeelKawn
