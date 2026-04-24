@@ -63,6 +63,7 @@ var _hint_label: Label
 var _work_checkboxes: Dictionary = {}
 
 var _pawn: Pawn = null
+var _traits_label: Label = null
 
 
 func _ready() -> void:
@@ -118,6 +119,11 @@ func _build_ui() -> void:
 	_state_label = _make_label("", FONT_BODY, ACCENT)
 	_state_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_root_vbox.add_child(_state_label)
+
+	# traits
+	_traits_label = _make_label("", FONT_SMALL, TEXT_DIM)
+	_traits_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_root_vbox.add_child(_traits_label)
 
 	_root_vbox.add_child(_make_section_header("Needs"))
 	for entry in NEED_BARS:
@@ -320,6 +326,7 @@ func _refresh() -> void:
 	var d: PawnData = _pawn.data
 	_title_label.text = "%s  (age %d)" % [d.display_name, d.age]
 	_state_label.text = _pawn.describe_state()
+	_traits_label.text = "Traits: %s" % d.traits_display()
 
 	for field in _need_bars:
 		var entry: Dictionary = _need_bars[field]

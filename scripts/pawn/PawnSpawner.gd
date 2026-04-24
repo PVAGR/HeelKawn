@@ -112,6 +112,9 @@ func spawn_starters(world: World, required_component_id: int = -1) -> void:
 		data.gender = _rng.randi_range(0, 1)
 		data.tile_pos = tile
 		data.color = PAWN_COLORS[placed % PAWN_COLORS.size()]
+		
+		# Assign 0-2 random traits to this pawn
+		_assign_random_traits(data)
 
 		var pawn: Pawn = pawn_scene.instantiate()
 		add_child(pawn)
@@ -149,3 +152,22 @@ func _pick_name(used_tiles: Dictionary) -> String:
 	if available.is_empty():
 		return "Settler-%d" % used_tiles.size()
 	return available[_rng.randi() % available.size()]
+
+
+## Assign 0-2 random traits to a pawn. Called at spawn time.
+func _assign_random_traits(pawn_data: PawnData) -> void:
+	var num_traits: int = _rng.randi_range(0, 2)  # 0, 1, or 2 traits
+	var trait_types: Array = Trait.Type.values()
+	var assigned: Dictionary = {}
+	
+	for _i in range(num_traits):
+		if trait_types.is_empty():
+			break
+		var trait_type = trait_types[_rng.randi() % trait_types.size()]
+		# Avoid duplicate traits
+		if not assigned.has(trait_type):
+			assigned[trait_type] = true
+			var trait := Trait.new(trait_type)
+			pawn_data.add_trait(trait)
+			print("[Spawn] trait: %s -> %s" % [pawn_data.display_name, trait.display_name])
+

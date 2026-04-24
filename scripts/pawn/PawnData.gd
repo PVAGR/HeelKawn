@@ -63,10 +63,57 @@ var work_chop:   bool = true
 var work_hunt:   bool = true
 var work_build:  bool = true
 
+## Traits: modifiers that affect need decay, skill XP, work speed, etc.
+## Each pawn starts with 0-2 traits at spawn.
+var traits: Array[Trait] = []
+
 
 func _init() -> void:
 	id = _next_id
 	_next_id += 1
+
+
+# ==================== traits ====================
+
+## Add a trait to this pawn. Traits modify various multipliers.
+func add_trait(trait: Trait) -> void:
+	if trait != null and not traits.has(trait):
+		traits.append(trait)
+
+
+## Get cumulative multiplier for a specific stat across all traits.
+## Example: get_trait_mult("hunger_decay_mult") -> 1.2 if traits add 20%.
+func get_trait_mult(stat_name: String) -> float:
+	var mult: float = 1.0
+	for trait in traits:
+		match stat_name:
+			"hunger_decay_mult": mult *= trait.hunger_decay_mult
+			"rest_decay_mult": mult *= trait.rest_decay_mult
+			"mood_decay_mult": mult *= trait.mood_decay_mult
+			"health_max_mult": mult *= trait.health_max_mult
+			"skill_xp_mult": mult *= trait.skill_xp_mult
+			"work_speed_mult": mult *= trait.work_speed_mult
+			"injury_chance_mult": mult *= trait.injury_chance_mult
+			"damage_taken_mult": mult *= trait.damage_taken_mult
+	return mult
+
+
+## Check if this pawn has a trait of the given type.
+func has_trait(trait_type: int) -> bool:
+	for trait in traits:
+		if trait.trait_type == trait_type:
+			return true
+	return false
+
+
+## Get trait display string for UI.
+func traits_display() -> String:
+	if traits.is_empty():
+		return "No traits"
+	var names: PackedStringArray = []
+	for trait in traits:
+		names.append(trait.display_name)
+	return ", ".join(names)
 
 
 # ==================== skills ====================
@@ -83,7 +130,8 @@ func get_skill_level(skill: int) -> int:
 ## a "Brenna's mining went up to 3!" message).
 func add_skill_xp(skill: int, amount: float) -> bool:
 	var before: int = get_skill_level(skill)
-	skill_xp[skill] = get_skill_xp(skill) + amount
+	var trait_mult: float = get_trait_mult("skill_xp_mult")
+	skill_xp[skill] = get_skill_xp(skill) + amount * trait_mult
 	return get_skill_level(skill) != before
 
 
@@ -99,10 +147,13 @@ func work_speed_for(skill: int) -> float:
 
 
 ## Multiplier applied to work ticks (low health and fatigue slow labour).
+## Traits can also modify work speed.
 func effective_labor_mult() -> float:
 	var h: float = clamp(health * 0.01, 0.0, 1.0)
 	var r: float = clamp(rest * 0.01, 0.0, 1.0)
-	return max(0.2, h * 0.55 + r * 0.45)
+	var base_mult: float = max(0.2, h * 0.55 + r * 0.45)
+	var trait_mult: float = get_trait_mult("work_speed_mult")
+	return base_mult * trait_mult
 
 
 static func skill_name(skill: int) -> String:
@@ -155,6 +206,9 @@ func to_save_dict() -> Dictionary:
 	var sx: Dictionary = {}
 	for k in skill_xp:
 		sx[str(k)] = skill_xp[k]
+	var trait_types: Array = []
+	for trait in traits:
+		trait_types.append(trait.trait_type)
 	return {
 		"id": id,
 		"display_name": display_name,
@@ -175,6 +229,7 @@ func to_save_dict() -> Dictionary:
 		"work_chop": work_chop,
 		"work_hunt": work_hunt,
 		"work_build": work_build,
+		"trait_types": trait_types,
 	}
 
 
@@ -205,6 +260,10 @@ static func from_save_dict(d: Dictionary) -> PawnData:
 	p.work_chop = bool(d.get("work_chop", true))
 	p.work_hunt = bool(d.get("work_hunt", true))
 	p.work_build = bool(d.get("work_build", true))
+	# Load traits
+	if d.has("trait_types") and d["trait_types"] is Array:
+		for trait_type in d["trait_types"]:
+			p.traits.append(Trait.new(int(trait_type)))
 	_next_id = maxi(_next_id, p.id + 1)
 	return p
 

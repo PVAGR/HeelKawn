@@ -601,8 +601,12 @@ func _apply_work_hazards() -> void:
 	if _current_job.type == Job.Type.MINE or _current_job.type == Job.Type.MINE_WALL:
 		var mining_level: int = data.get_skill_level(PawnData.Skill.MINING)
 		hazard_chance = 0.02 * max(0.1, 1.0 - (mining_level / 20.0))
+		# Traits can modify injury chance
+		hazard_chance *= data.get_trait_mult("injury_chance_mult")
 	if hazard_chance > 0.0 and randf() < hazard_chance:
-		var damage: float = randf_range(3.0, 8.0)  # 3-8 health per injury
+		var damage: float = randf_range(3.0, 8.0)
+		# Traits can reduce damage taken
+		damage *= data.get_trait_mult("damage_taken_mult")
 		data.health = max(0.0, data.health - damage)
 		print("[Pawn] %s injured while working  (damage=%.1f health=%.1f)" %
 			[data.display_name, damage, data.health])
@@ -1156,23 +1160,29 @@ func _decay_needs() -> void:
 	# faster recovery rate -- the payoff for hauling wood and building.
 	# Everything else (mood, etc.) decays normally so a 24-hour nap still
 	# erodes happiness.
+	
+	# Get trait multipliers
+	var hunger_mult: float = data.get_trait_mult("hunger_decay_mult")
+	var rest_mult: float = data.get_trait_mult("rest_decay_mult")
+	var mood_mult: float = data.get_trait_mult("mood_decay_mult")
+	
 	if _state == State.SLEEPING:
-		data.hunger = max(0.0, data.hunger - HUNGER_DECAY_PER_TICK_SLEEPING)
+		data.hunger = max(0.0, data.hunger - HUNGER_DECAY_PER_TICK_SLEEPING * hunger_mult)
 		var rate: float = REST_RECOVER_PER_TICK_SLEEP
 		if _reserved_bed.x >= 0 and data.tile_pos == _reserved_bed and \
 				_world != null and _world.is_bed_owned_by(_reserved_bed, self):
 			rate *= REST_RECOVER_BED_MULTIPLIER
 		data.rest = min(100.0, data.rest + rate)
 	else:
-		data.hunger = max(0.0, data.hunger - HUNGER_DECAY_PER_TICK)
-		data.rest   = max(0.0, data.rest   - REST_DECAY_PER_TICK)
+		data.hunger = max(0.0, data.hunger - HUNGER_DECAY_PER_TICK * hunger_mult)
+		data.rest   = max(0.0, data.rest   - REST_DECAY_PER_TICK * rest_mult)
 	# Mood: net loss when needs aren't met, net gain when they are.
 	# Passive contentment outpaces decay, so a pawn whose hunger AND rest are
 	# both comfortable will recover happiness on their own.
 	if data.hunger >= MOOD_CONTENT_FLOOR and data.rest >= MOOD_CONTENT_FLOOR:
-		data.mood = min(100.0, data.mood + MOOD_GAIN_PER_TICK_CONTENT - MOOD_DECAY_PER_TICK)
+		data.mood = min(100.0, data.mood + MOOD_GAIN_PER_TICK_CONTENT - MOOD_DECAY_PER_TICK * mood_mult)
 	else:
-		data.mood = max(0.0, data.mood - MOOD_DECAY_PER_TICK)
+		data.mood = max(0.0, data.mood - MOOD_DECAY_PER_TICK * mood_mult)
 	# Death from starvation, exhaustion, or injury
 	_check_death_conditions()
 
