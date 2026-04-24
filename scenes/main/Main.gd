@@ -74,6 +74,7 @@ const DEER_REGROW_TICKS:   int = 1800
 @onready var _preview_layer: Node2D = $BuildPreviewOverlay
 @onready var _pawn_spawner: PawnSpawner = $PawnSpawner
 @onready var _animal_spawner: AnimalSpawner = $AnimalSpawner
+@onready var _enemy_spawner: EnemySpawner = $EnemySpawner
 @onready var _hud: ColonyHUD = $ColonyHUD
 @onready var _toolbar: BuildToolbar = $BuildToolbar
 @onready var _info_panel: PawnInfoPanel = $PawnInfoPanel
@@ -86,6 +87,11 @@ var _selected_pawn: Pawn = null
 ## Pixel radius around a pawn that counts as a click hit. Pawns draw at
 ## DRAW_RADIUS=3.5; we add a generous slop so moving targets are easy to grab.
 const SELECT_PICK_RADIUS_PX: float = 7.0
+
+# -------------------- draft mode (combat) --------------------
+## Draft mode: select pawns to fight enemies. Pawns in draft mode stop normal work.
+var _draft_mode_active: bool = false
+var _drafted_pawns: Array[Pawn] = []
 
 ## Pending regrowth events. Each entry is a Dictionary:
 ##   { "tile": Vector2i, "feature": int (TileFeature.Type), "ready_tick": int }
@@ -166,6 +172,9 @@ func _bootstrap_colony() -> void:
 	# Spawn animals and register spawner with world for breeding
 	_animal_spawner.spawn_initial(_world)
 	_world.set_meta("animal_spawner", _animal_spawner)
+	# Initialize enemy spawner for combat encounters
+	if _enemy_spawner != null:
+		GameManager.game_tick.connect(_on_enemy_tick.bind(_enemy_spawner))
 	_seed_jobs_from_world()
 	# Seed initial tunneling toward sealed ore.
 	_react_to_mining_progress()
@@ -229,6 +238,8 @@ func _on_game_tick(tick: int) -> void:
 	# Post hunting jobs for live animals every 10 ticks
 	if tick % 10 == 0:
 		_post_hunting_jobs_for_animals()
+	# Enemy AI and raid spawning
+	_on_enemy_tick(tick, _enemy_spawner)
 	if tick % 100 == 0:
 		print("[Main] Tick %d" % tick)
 	# Failsafe: pawns that slipped into solid tiles (rare) get nudged; log once per pawn.
@@ -1427,3 +1438,22 @@ func _restore_stockpiles_from_save(zones_data: Array) -> void:
 			_world.stockpile = sp
 		StockpileManager.register(sp)
 		sp.queue_redraw()
+
+
+# ==================== enemy combat ====================
+
+func _on_enemy_tick(tick: int, spawner: EnemySpawner) -> void:
+	if spawner == null:
+		return
+	
+	# Spawn raids at intervals
+	if tick == spawner._next_raid_tick:
+		spawner.spawn_raid(_world)
+		# Schedule next raid
+		spawner._next_raid_tick += EnemySpawner.RAID_INTERVAL_TICKS
+	
+	# Clean up dead enemies and display enemy status
+	if tick % 20 == 0:
+		spawner.cleanup_dead_enemies()
+		if spawner.get_enemy_count() > 0 and tick % 100 == 0:
+			print("[Combat] %s" % spawner.describe())
