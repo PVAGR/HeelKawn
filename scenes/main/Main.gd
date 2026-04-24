@@ -73,6 +73,7 @@ const DEER_REGROW_TICKS:   int = 1800
 @onready var _world: World = $World
 @onready var _preview_layer: Node2D = $BuildPreviewOverlay
 @onready var _pawn_spawner: PawnSpawner = $PawnSpawner
+@onready var _animal_spawner: AnimalSpawner = $AnimalSpawner
 @onready var _hud: ColonyHUD = $ColonyHUD
 @onready var _toolbar: BuildToolbar = $BuildToolbar
 @onready var _info_panel: PawnInfoPanel = $PawnInfoPanel
@@ -162,6 +163,9 @@ func _bootstrap_colony() -> void:
 		return
 	_place_stockpile(main_component)
 	_pawn_spawner.spawn_starters(_world, main_component)
+	# Spawn animals and register spawner with world for breeding
+	_animal_spawner.spawn_initial(_world)
+	_world.set_meta("animal_spawner", _animal_spawner)
 	_seed_jobs_from_world()
 	# Seed initial tunneling toward sealed ore.
 	_react_to_mining_progress()
@@ -222,6 +226,9 @@ func _fit_seed_stockpile_rect(tile: Vector2i, main_component: int, w: int, h: in
 
 func _on_game_tick(tick: int) -> void:
 	_process_regrowth(tick)
+	# Post hunting jobs for live animals every 10 ticks
+	if tick % 10 == 0:
+		_post_hunting_jobs_for_animals()
 	if tick % 100 == 0:
 		print("[Main] Tick %d" % tick)
 	# Failsafe: pawns that slipped into solid tiles (rare) get nudged; log once per pawn.
@@ -930,6 +937,37 @@ static func _hunt_ticks_for(feature: int) -> int:
 	if feature == TileFeature.Type.DEER:
 		return HUNT_DEER_WORK_TICKS
 	return HUNT_RABBIT_WORK_TICKS
+
+
+## Post hunting jobs for live animals (called each tick to keep jobs in sync with moving animals).
+func _post_hunting_jobs_for_animals() -> void:
+	if _animal_spawner == null or _animal_spawner.animals.is_empty():
+		return
+	
+	var main_component: int = _world.pathfinder.largest_component_id()
+	var hunt_jobs_posted: int = 0
+	
+	for animal in _animal_spawner.animals:
+		if not is_instance_valid(animal) or animal == null:
+			continue
+		
+		var tile: Vector2i = animal.tile_pos
+		if _world.pathfinder.component_of(tile) != main_component:
+			continue
+		
+		# Check if there's already a HUNT job for this animal's tile
+		var has_job: bool = false
+		for job in JobManager.jobs:
+			if job != null and job.type == Job.Type.HUNT and job.tile == tile and job.state == Job.State.OPEN:
+				has_job = true
+				break
+		
+		# If no job exists, post one
+		if not has_job and hunt_jobs_posted < MAX_HUNT_JOBS:
+			var animal_type: int = animal.animal_type
+			var work_ticks: int = HUNT_RABBIT_WORK_TICKS if animal_type == Animal.Type.RABBIT else HUNT_DEER_WORK_TICKS
+			JobManager.post(Job.Type.HUNT, tile, HUNT_PRIORITY, work_ticks)
+			hunt_jobs_posted += 1
 
 
 ## Same idea for regrowth: each species respawns on its own timer.
