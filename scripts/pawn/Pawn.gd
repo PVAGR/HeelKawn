@@ -1,68 +1,4 @@
 
-
-		# ==================== combat ====================
-
-		func _engage_enemies() -> void:
-			if _state != State.IDLE and _state != State.DRAFT_WALK:
-				return
-	
-			# Find nearest enemy in melee range
-			var nearest_enemy: Enemy = null
-			var nearest_dist_sq: float = INF
-			var melee_range_sq: float = 100.0  # About 10 pixels
-	
-			for enemy in get_tree().get_nodes_in_group("enemies"):
-				if not is_instance_valid(enemy) or enemy == null:
-					continue
-				var dist_sq: float = (enemy.position - position).length_squared()
-				if dist_sq < melee_range_sq and dist_sq < nearest_dist_sq:
-					nearest_enemy = enemy
-					nearest_dist_sq = dist_sq
-	
-			# If no enemy in melee range, move toward nearest enemy
-			if nearest_enemy == null:
-				var closest_enemy: Enemy = null
-				var closest_dist_sq: float = INF
-				var search_range_sq: float = 5000.0  # 70 pixel search range
-		
-				for enemy in get_tree().get_nodes_in_group("enemies"):
-					if not is_instance_valid(enemy) or enemy == null:
-						continue
-					var dist_sq: float = (enemy.position - position).length_squared()
-					if dist_sq < search_range_sq and dist_sq < closest_dist_sq:
-						closest_enemy = enemy
-						closest_dist_sq = dist_sq
-		
-				if closest_enemy != null and _state == State.IDLE:
-					# Path to enemy
-					var target_tile: Vector2i = _world.tile_to_world_inv(closest_enemy.position)
-					_current_path = _world.pathfinder.find_path(data.tile_pos, target_tile)
-					_path_index = 0
-					if not _current_path.is_empty():
-						_state = State.DRAFT_WALK
-				return
-	
-			# Attack nearest enemy
-			if randf() < 0.5:  # Attack every other tick on average
-				var hit: bool = CombatResolver.resolve_attack(self, nearest_enemy)
-				if hit:
-					# Get knockback effect from hit
-					pass
-		# Combat: If in draft mode, engage nearby enemies
-		if draft_mode:
-			_engage_enemies()
-	
-	# Draft mode: skip normal jobs, just handle carried items and essential needs
-	if draft_mode:
-		# Still need to handle carrying and basic needs
-		if data.is_carrying():
-			_begin_haul_to_stockpile()
-			return
-		if _maybe_start_eating():
-			return
-		# Otherwise stay idle, waiting for movement commands
-		return
-	
 class_name Pawn
 extends Node2D
 
@@ -84,6 +20,11 @@ extends Node2D
 const DRAW_RADIUS: float = 3.5
 const OUTLINE_WIDTH: float = 1.0
 const OUTLINE_WIDTH_BUSY: float = 1.75
+const HEALTH_BAR_W: float = 8.0
+const HEALTH_BAR_H: float = 1.2
+const HEALTH_BAR_Y: float = 7.0
+const MOOD_DOT_Y: float = -9.5
+const DRAFT_CHEVRON_Y: float = -12.0
 
 ## Offset and size of the "carrying" swatch drawn above the pawn's head.
 const CARRY_OFFSET: Vector2 = Vector2(0.0, -6.0)
@@ -247,10 +188,16 @@ var _mood_level: int = 0
 ## Game tick at which we last logged a haul failure for this pawn, so the
 ## retry loop doesn't flood the console.
 var _last_haul_fail_log_tick: int = -HAUL_FAIL_LOG_EVERY_N_TICKS
+var _anim_t: float = 0.0
+var _sfx: AudioStreamPlayer2D = null
 
 
 func _ready() -> void:
 	GameManager.game_tick.connect(_on_game_tick)
+	_sfx = AudioStreamPlayer2D.new()
+	_sfx.max_distance = 320.0
+	_sfx.volume_db = -5.0
+	add_child(_sfx)
 
 
 ## Called by PawnSpawner immediately after instantiation.
@@ -406,6 +353,7 @@ func sanity_check_impassable_tile() -> void:
 func _process(delta: float) -> void:
 	if data == null or GameManager.is_paused:
 		return
+	_anim_t += delta * (0.5 + GameManager.game_speed * 0.25)
 	if _path.is_empty():
 		return
 	var step: float = WALK_SPEED_WORLD_UNITS_PER_SEC * delta * GameManager.game_speed
@@ -476,6 +424,8 @@ func _on_game_tick(_tick: int) -> void:
 		return
 	_decay_needs()
 	_check_thresholds()
+	if draft_mode:
+		_engage_enemies()
 	# Panic-sleep interrupt: if rest is critically low and we're not already
 	# resolving a true emergency (asleep, eating, or fed/in-hand), abandon
 	# what we're doing and collapse. Beats the eat/haul cycle that otherwise
@@ -535,6 +485,13 @@ func _force_panic_sleep() -> void:
 
 func _tick_idle() -> void:
 	if _world == null or _world.pathfinder == null:
+		return
+	if draft_mode:
+		if data.is_carrying():
+			_begin_haul_to_stockpile()
+			return
+		if _maybe_start_eating():
+			return
 		return
 	# Priority chain (most urgent first):
 	#   1. Starving + holding food          -> eat from hand
@@ -675,6 +632,7 @@ func _apply_work_hazards() -> void:
 		# Traits can reduce damage taken
 		damage *= data.get_trait_mult("damage_taken_mult")
 		data.health = max(0.0, data.health - damage)
+		_play_sfx("res://assets/audio/pawn_hurt.ogg", 0.9)
 		# Trigger stress mood event from injury
 		data.add_mood_event(MoodEvent.Type.STRESS, 60.0, 300)
 		print("[Pawn] %s injured while working  (damage=%.1f health=%.1f)" %
@@ -1102,6 +1060,7 @@ func _finish_eating() -> void:
 				var gain: float = Item.hunger_restore(food_type)
 				data.hunger = min(100.0, data.hunger + gain)
 				data.mood = min(100.0, data.mood + MOOD_BONUS_ATE)
+				_play_sfx("res://assets/audio/pawn_eat.ogg", 1.0)
 				# Eating meat brings more joy than berries
 				if food_type == Item.Type.MEAT:
 					data.add_mood_event(MoodEvent.Type.JOY, 70.0, 200)
@@ -1197,6 +1156,42 @@ func _tick_sleeping() -> void:
 		_release_bed_if_reserved()
 		_reset_to_idle()
 		return
+
+
+# ==================== combat ====================
+
+func _engage_enemies() -> void:
+	if _world == null or _world.pathfinder == null:
+		return
+	if _state != State.IDLE and _state != State.DRAFT_WALK:
+		return
+	var closest_enemy: Enemy = null
+	var closest_dist_sq: float = INF
+	for enemy_node in get_tree().get_nodes_in_group("enemies"):
+		var enemy: Enemy = enemy_node as Enemy
+		if enemy == null or not is_instance_valid(enemy):
+			continue
+		var dist_sq: float = position.distance_squared_to(enemy.position)
+		if dist_sq < closest_dist_sq:
+			closest_enemy = enemy
+			closest_dist_sq = dist_sq
+	if closest_enemy == null:
+		return
+	if closest_dist_sq <= 110.0:
+		if randf() < 0.45:
+			CombatResolver.resolve_attack(self, closest_enemy)
+		return
+	if _state == State.IDLE:
+		var target_tile: Vector2i = _world.world_to_tile(closest_enemy.position)
+		if not _world.pathfinder.is_passable(target_tile):
+			target_tile = _world.pathfinder.find_adjacent_passable(target_tile)
+		if target_tile.x < 0:
+			return
+		var path: Array[Vector2i] = _world.pathfinder.find_path(data.tile_pos, target_tile)
+		if path.is_empty():
+			return
+		_state = State.DRAFT_WALK
+		_start_path(path)
 	# Normal wake on rest restored.
 	if data.rest >= REST_WAKE_THRESHOLD:
 		data.mood = min(100.0, data.mood + MOOD_BONUS_WOKE_REFRESHED)
@@ -1323,6 +1318,7 @@ func _die() -> void:
 	
 	# Trigger sorrow in nearby pawns who witness the death
 	_trigger_sorrow_in_nearby_pawns()
+	_play_sfx("res://assets/audio/pawn_die.ogg", 0.85)
 	
 	# Remove from groups and free the node
 	remove_from_group("pawns")
@@ -1393,17 +1389,21 @@ func _start_wander() -> void:
 func _draw() -> void:
 	if data == null:
 		return
+	var bob: float = 0.0
+	if not _path.is_empty() and _state != State.SLEEPING:
+		bob = sin(_anim_t * 9.0) * 0.45
+	var body_origin: Vector2 = Vector2(0.0, bob)
 	# Sleeping pawns render slightly dimmer to read as "off duty".
 	var body_color: Color = data.color
 	if _state == State.SLEEPING:
 		body_color = data.color.darkened(0.25)
-	draw_circle(Vector2.ZERO, DRAW_RADIUS, body_color)
+	draw_circle(body_origin, DRAW_RADIUS, body_color)
 	if is_selected:
 		# Bright yellow ring sits just outside the body and the busy outline so
 		# it reads even when the pawn is mid-task.
 		var sel_color := Color(1.0, 0.92, 0.18)
 		draw_arc(
-			Vector2.ZERO,
+			body_origin,
 			DRAW_RADIUS + 3.5,
 			0.0,
 			TAU,
@@ -1434,26 +1434,59 @@ func _draw() -> void:
 	elif _state == State.DRAFT_WALK:
 		outline_c = Color(0.45, 0.95, 1.0)  # bright cyan
 	var outline_w: float = OUTLINE_WIDTH_BUSY if busy else OUTLINE_WIDTH
-	draw_arc(Vector2.ZERO, DRAW_RADIUS, 0.0, TAU, 20, outline_c, outline_w, true)
+	draw_arc(body_origin, DRAW_RADIUS, 0.0, TAU, 20, outline_c, outline_w, true)
 	# Sleep "Z" mark: tiny purple zig-zag floating above a sleeping pawn.
 	if _state == State.SLEEPING:
 		var z_color := Color(0.78, 0.66, 1.0)
-		var z_top := Vector2(2.0, -8.0)
-		var z_mid_r := Vector2(5.0, -8.0)
-		var z_mid_l := Vector2(2.0, -5.0)
-		var z_bot := Vector2(5.0, -5.0)
+		var z_top := body_origin + Vector2(2.0, -8.0)
+		var z_mid_r := body_origin + Vector2(5.0, -8.0)
+		var z_mid_l := body_origin + Vector2(2.0, -5.0)
+		var z_bot := body_origin + Vector2(5.0, -5.0)
 		draw_line(z_top, z_mid_r, z_color, 0.7, true)
 		draw_line(z_mid_r, z_mid_l, z_color, 0.7, true)
 		draw_line(z_mid_l, z_bot, z_color, 0.7, true)
+	# Draft marker is always visible when pawn is player-controlled.
+	if draft_mode:
+		var c0: Vector2 = body_origin + Vector2(-2.5, DRAFT_CHEVRON_Y)
+		var c1: Vector2 = body_origin + Vector2(0.0, DRAFT_CHEVRON_Y - 2.0)
+		var c2: Vector2 = body_origin + Vector2(2.5, DRAFT_CHEVRON_Y)
+		draw_polyline([c0, c1, c2], Color(1.0, 0.35, 0.25), 1.0, true)
+	# Health bar under the pawn for quick survivability read.
+	var hp_ratio: float = clamp(data.health / 100.0, 0.0, 1.0)
+	var hb_bg := Rect2(
+		body_origin + Vector2(-HEALTH_BAR_W * 0.5, HEALTH_BAR_Y),
+		Vector2(HEALTH_BAR_W, HEALTH_BAR_H)
+	)
+	draw_rect(hb_bg, Color(0, 0, 0, 0.65), true)
+	if hp_ratio > 0.0:
+		draw_rect(Rect2(hb_bg.position, Vector2(HEALTH_BAR_W * hp_ratio, HEALTH_BAR_H)), Color(0.25, 0.95, 0.35), true)
+	# Mood dot above head: green/gold/red for stable/strained/crisis.
+	var mood_dot: Color = Color(0.25, 0.9, 0.35)
+	if data.mood < 50.0:
+		mood_dot = Color(1.0, 0.78, 0.2)
+	if data.mood < 25.0:
+		mood_dot = Color(1.0, 0.25, 0.2)
+	draw_circle(body_origin + Vector2(0.0, MOOD_DOT_Y), 0.85, mood_dot)
 	# Carry indicator: small colored swatch above the head.
 	if data.is_carrying():
 		var c: Color = Item.color_for(data.carrying)
 		var rect := Rect2(
-			CARRY_OFFSET - CARRY_SIZE * 0.5,
+			body_origin + CARRY_OFFSET - CARRY_SIZE * 0.5,
 			CARRY_SIZE
 		)
 		draw_rect(rect, c, true)
 		draw_rect(rect, Color.BLACK, false, 0.6)
+
+
+func _play_sfx(path: String, pitch: float = 1.0) -> void:
+	if _sfx == null or not ResourceLoader.exists(path):
+		return
+	var stream: AudioStream = load(path)
+	if stream == null:
+		return
+	_sfx.stream = stream
+	_sfx.pitch_scale = pitch
+	_sfx.play()
 
 
 # ---------------------------------------------------------------------------

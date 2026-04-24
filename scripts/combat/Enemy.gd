@@ -51,9 +51,16 @@ var _target_pawn: Pawn = null
 var _current_path: Array[Vector2i] = []
 var _path_index: int = 0
 var _dead: bool = false
+var _anim_t: float = 0.0
+var _sfx: AudioStreamPlayer2D = null
 
 func _ready() -> void:
 	add_to_group("enemies")
+	GameManager.game_tick.connect(_on_game_tick)
+	_sfx = AudioStreamPlayer2D.new()
+	_sfx.max_distance = 360.0
+	_sfx.volume_db = -4.0
+	add_child(_sfx)
 	queue_redraw()
 
 
@@ -73,6 +80,7 @@ func bind(p_enemy_type: Type, p_tile: Vector2i, p_world: World) -> void:
 func _physics_process(delta: float) -> void:
 	if _dead or _world == null:
 		return
+	_anim_t += delta * 5.5
 	
 	# Move along current path or toward target pawn
 	var target_world: Vector2
@@ -93,13 +101,6 @@ func _physics_process(delta: float) -> void:
 		position = target_world
 		if not _current_path.is_empty() and _path_index < _current_path.size():
 			_path_index += 1
-
-
-func _process(_delta: float) -> void:
-	if _dead or _world == null:
-		return
-	
-	GameManager.game_tick.connect(_on_game_tick, CONNECT_ONE_SHOT)
 
 
 func _on_game_tick(_tick: int) -> void:
@@ -163,6 +164,7 @@ func _attack_pawn(pawn: Pawn) -> void:
 	pawn.data.health = max(0.0, pawn.data.health - damage)
 	pawn.data.add_mood_event(MoodEvent.Type.DREAD, 80.0, 400)
 	attack_cooldown = spec.attack_cooldown
+	_play_sfx("res://assets/audio/enemy_attack.ogg", randf_range(0.9, 1.05))
 	
 	print("[Enemy] %s attacked %s for %.1f damage (health %.1f)" % 
 		[spec.name, pawn.data.display_name, damage, pawn.data.health])
@@ -196,6 +198,7 @@ func _die() -> void:
 	var spec = SPECIES_DATA[enemy_type]
 	# Drop loot
 	_drop_loot()
+	_play_sfx("res://assets/audio/enemy_die.ogg", 0.9)
 	remove_from_group("enemies")
 	queue_free()
 
@@ -228,11 +231,31 @@ func _draw() -> void:
 		return
 	var spec = SPECIES_DATA[enemy_type]
 	var color: Color = spec.color
+	var pulse: float = 0.2 + 0.2 * (sin(_anim_t) * 0.5 + 0.5)
 	# Health affects color brightness
 	var health_factor: float = clamp(health / max_health, 0.2, 1.0)
 	color = color.lerp(Color.BLACK, 1.0 - health_factor)
 	draw_circle(Vector2.ZERO, spec.size, color)
+	draw_circle(Vector2.ZERO, spec.size + 0.8, Color(color.r, color.g, color.b, pulse), false)
+	# Compact health bar under enemy
+	var ratio: float = clamp(health / max_health, 0.0, 1.0)
+	var w: float = spec.size * 2.2
+	var bg := Rect2(Vector2(-w * 0.5, spec.size + 2.8), Vector2(w, 1.1))
+	draw_rect(bg, Color(0, 0, 0, 0.7), true)
+	if ratio > 0.0:
+		draw_rect(Rect2(bg.position, Vector2(bg.size.x * ratio, bg.size.y)), Color(1.0, 0.25, 0.2), true)
 
 
 func get_species_name() -> String:
 	return SPECIES_DATA[enemy_type].name
+
+
+func _play_sfx(path: String, pitch: float = 1.0) -> void:
+	if _sfx == null or not ResourceLoader.exists(path):
+		return
+	var stream: AudioStream = load(path)
+	if stream == null:
+		return
+	_sfx.stream = stream
+	_sfx.pitch_scale = pitch
+	_sfx.play()

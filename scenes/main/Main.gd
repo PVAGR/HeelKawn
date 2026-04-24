@@ -172,9 +172,6 @@ func _bootstrap_colony() -> void:
 	# Spawn animals and register spawner with world for breeding
 	_animal_spawner.spawn_initial(_world)
 	_world.set_meta("animal_spawner", _animal_spawner)
-	# Initialize enemy spawner for combat encounters
-	if _enemy_spawner != null:
-		GameManager.game_tick.connect(_on_enemy_tick.bind(_enemy_spawner))
 	_seed_jobs_from_world()
 	# Seed initial tunneling toward sealed ore.
 	_react_to_mining_progress()

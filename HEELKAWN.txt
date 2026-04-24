@@ -24,7 +24,25 @@ UI:  ColonyHUD, BuildToolbar, PawnInfoPanel
 WHERE WE LEFT OFF  (update this when status changes)
 ================================================================================
 
-Last updated: 2026-04-24 (Session 5 Complete)
+Last updated: 2026-04-23 (Session 6 Part 1)
+
+Session 6 — Pawn Visuals & Audio (🟡 IN PROGRESS):
+✅ Repaired Pawn.gd structure after combat merge corruption
+✅ Draft combat behavior reattached to tick/idle paths correctly
+✅ Added pawn movement bob animation for better readability
+✅ Added pawn health bar + mood indicator dot in-world
+✅ Added draft chevron marker over drafted pawns
+✅ Added enemy pulse + health bar visual feedback
+✅ Added resilient SFX hooks (eat, hurt, death, enemy attack/death)
+✅ SFX safely no-op when clip files are missing (no runtime break)
+✅ Removed duplicate enemy tick binding in Main (single update path)
+
+Session 6 remaining:
+- Add sprite-sheet based pawn body/hair/clothes variants
+- Add working/eating/sleeping animation poses beyond bob
+- Add actual sound files in assets/audio and mix levels
+- Add ambient audio layer and day/night mix
+- Add weapon/combat impact effects
 
 Session 5 — Combat & Raiding (✓ COMPLETE):
 ✅ Created Enemy.gd with three enemy types (Raider, Brigand, Warlord)
@@ -91,8 +109,6 @@ Crisis level system:
 - HIGH: 60-80% (work slowdowns)
 - CRITICAL: > 80% (pawns go on strike)
 
-Session 5 — Combat & Raiding (⏳ NEXT):
-Goals:
 Session 6 — Pawn Visuals & Audio (⏳ NEXT):
 Goals:
 - Add pawn sprite variations (hair, body style, clothes colors)
@@ -129,8 +145,9 @@ Session 1-8 Roadmap:
 
 Open / next:
 - Scene setup required: Add EnemySpawner node to Main.tscn (AnimalSpawner may already exist)
-- Test Sessions 3-5 in-game before moving to Session 6
-- Ready to begin Session 6 Pawn Visuals & Audio.
+- Add actual .ogg files to assets/audio to activate new SFX hooks.
+- Playtest Sessions 3-6 together and tune combat/mood/visual readability.
+- Continue Session 6 (sprite variants + richer animation states).
 
 Rules:
 - Main.DesignationMode and BuildToolbar MODE_* (0-4) must match.
@@ -142,6 +159,8 @@ LOG (newest at top)
 
 2026-04-24  Added GIT_TROUBLESHOOTING.txt; ran gh auth setup-git so Git uses GitHub
             login (helps when IDE push fails). If push still fails, read that file.
+2026-04-23  Session 6 Part 1: fixed Pawn merge corruption, improved pawn/enemy
+            visuals (health/mood/draft markers), and added safe SFX hooks.
 2026-04-24  Created GitHub repo PVAGR/HeelKawn, added origin, pushed all commits.
 2026-04-24  Single handoff file HEELKAWN.txt only; rule points here; user asked
             for a text, read every session, update every project change.
