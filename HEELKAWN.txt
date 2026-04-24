@@ -24,15 +24,35 @@ UI:  ColonyHUD, BuildToolbar, PawnInfoPanel
 WHERE WE LEFT OFF  (update this when status changes)
 ================================================================================
 
-Last updated: 2026-04-24
+Last updated: 2026-04-24 (Session 1 Complete)
 
-Recent:
-- GitHub remote: https://github.com/PVAGR/HeelKawn (origin, branch master)
-- Build/zone preview uses BuildPreviewOverlay (after World) so preview is visible.
-- Build toolbar: strong “selected” look for active tool; Save [F5] / Load [F8] in bar.
+Session 1 — Death Mechanics (✓ COMPLETE):
+✅ Implemented starvation death (hunger <= 0)
+✅ Implemented exhaustion death (rest <= 0)
+✅ Implemented injury death (health <= 0)
+✅ Added mining hazards: 2% base injury chance, scales with mining skill
+✅ Health damage range: 3-8 per injury, skilled miners take less
+✅ Death cleanup: releases job, frees bed, drops items to stockpile
+✅ Code: Pawn.gd _check_death_conditions(), _die(), _apply_work_hazards()
+
+Session 2 — Traits System (⏳ NEXT):
+Goals:
+- Define trait framework (10-15 base traits)
+- Spawn pawns with random traits
+- Traits modify: need decay multipliers, skill XP rate, work speed, mood threshold
+- UI: trait display on PawnInfoPanel
+- Examples: Workhorse (20% faster work, higher hunger), Lazy (30% slower), etc.
+
+Session 3-8 Roadmap:
+3: Animal AI (rabbits/deer, flocking, breeding)
+4: Mood Events (mood triggers, crises, feedback UI)
+5: Combat & Raiding (enemies, draft mode, injuries, loot)
+6: Pawn Visuals & Audio (replace circles with sprites, animations, SFX)
+7: Content & Variety (cooking/crafting jobs, new buildings, 20+ traits)
+8: Polish & QoL (job filters, pawn scheduler, mini-map, perf, final bugs)
 
 Open / next:
-- (put next tasks, bugs, or goals here)
+- None blocking. Ready to begin Session 2 Traits System.
 
 Rules:
 - Main.DesignationMode and BuildToolbar MODE_* (0-4) must match.
