@@ -1,3 +1,57 @@
+
+
+		# ==================== combat ====================
+
+		func _engage_enemies() -> void:
+			if _state != State.IDLE and _state != State.DRAFT_WALK:
+				return
+	
+			# Find nearest enemy in melee range
+			var nearest_enemy: Enemy = null
+			var nearest_dist_sq: float = INF
+			var melee_range_sq: float = 100.0  # About 10 pixels
+	
+			for enemy in get_tree().get_nodes_in_group("enemies"):
+				if not is_instance_valid(enemy) or enemy == null:
+					continue
+				var dist_sq: float = (enemy.position - position).length_squared()
+				if dist_sq < melee_range_sq and dist_sq < nearest_dist_sq:
+					nearest_enemy = enemy
+					nearest_dist_sq = dist_sq
+	
+			# If no enemy in melee range, move toward nearest enemy
+			if nearest_enemy == null:
+				var closest_enemy: Enemy = null
+				var closest_dist_sq: float = INF
+				var search_range_sq: float = 5000.0  # 70 pixel search range
+		
+				for enemy in get_tree().get_nodes_in_group("enemies"):
+					if not is_instance_valid(enemy) or enemy == null:
+						continue
+					var dist_sq: float = (enemy.position - position).length_squared()
+					if dist_sq < search_range_sq and dist_sq < closest_dist_sq:
+						closest_enemy = enemy
+						closest_dist_sq = dist_sq
+		
+				if closest_enemy != null and _state == State.IDLE:
+					# Path to enemy
+					var target_tile: Vector2i = _world.tile_to_world_inv(closest_enemy.position)
+					_current_path = _world.pathfinder.find_path(data.tile_pos, target_tile)
+					_path_index = 0
+					if not _current_path.is_empty():
+						_state = State.DRAFT_WALK
+				return
+	
+			# Attack nearest enemy
+			if randf() < 0.5:  # Attack every other tick on average
+				var hit: bool = CombatResolver.resolve_attack(self, nearest_enemy)
+				if hit:
+					# Get knockback effect from hit
+					pass
+		# Combat: If in draft mode, engage nearby enemies
+		if draft_mode:
+			_engage_enemies()
+	
 	# Draft mode: skip normal jobs, just handle carried items and essential needs
 	if draft_mode:
 		# Still need to handle carrying and basic needs
