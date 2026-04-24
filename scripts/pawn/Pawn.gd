@@ -1389,6 +1389,7 @@ func _start_wander() -> void:
 func _draw() -> void:
 	if data == null:
 		return
+	var body_radius: float = _body_radius()
 	var bob: float = 0.0
 	if not _path.is_empty() and _state != State.SLEEPING:
 		bob = sin(_anim_t * 9.0) * 0.45
@@ -1397,14 +1398,18 @@ func _draw() -> void:
 	var body_color: Color = data.color
 	if _state == State.SLEEPING:
 		body_color = data.color.darkened(0.25)
-	draw_circle(body_origin, DRAW_RADIUS, body_color)
+	draw_circle(body_origin, body_radius, body_color)
+	# Apparel ring gives each pawn a readable outfit color.
+	draw_arc(body_origin, body_radius - 0.9, PI * 0.12, PI * 0.88, 16, data.apparel_color, 1.0, true)
+	# Hair style overlays near the top of the head.
+	_draw_hair(body_origin, body_radius)
 	if is_selected:
 		# Bright yellow ring sits just outside the body and the busy outline so
 		# it reads even when the pawn is mid-task.
 		var sel_color := Color(1.0, 0.92, 0.18)
 		draw_arc(
 			body_origin,
-			DRAW_RADIUS + 3.5,
+			body_radius + 3.5,
 			0.0,
 			TAU,
 			28,
@@ -1434,7 +1439,7 @@ func _draw() -> void:
 	elif _state == State.DRAFT_WALK:
 		outline_c = Color(0.45, 0.95, 1.0)  # bright cyan
 	var outline_w: float = OUTLINE_WIDTH_BUSY if busy else OUTLINE_WIDTH
-	draw_arc(body_origin, DRAW_RADIUS, 0.0, TAU, 20, outline_c, outline_w, true)
+	draw_arc(body_origin, body_radius, 0.0, TAU, 20, outline_c, outline_w, true)
 	# Sleep "Z" mark: tiny purple zig-zag floating above a sleeping pawn.
 	if _state == State.SLEEPING:
 		var z_color := Color(0.78, 0.66, 1.0)
@@ -1476,6 +1481,33 @@ func _draw() -> void:
 		)
 		draw_rect(rect, c, true)
 		draw_rect(rect, Color.BLACK, false, 0.6)
+
+
+func _body_radius() -> float:
+	if data == null:
+		return DRAW_RADIUS
+	match data.body_type:
+		PawnData.BodyType.SLIM:
+			return DRAW_RADIUS - 0.35
+		PawnData.BodyType.BROAD:
+			return DRAW_RADIUS + 0.45
+		_:
+			return DRAW_RADIUS
+
+
+func _draw_hair(body_origin: Vector2, body_radius: float) -> void:
+	if data == null:
+		return
+	var hair_c: Color = data.hair_color
+	match data.hair_style:
+		PawnData.HairStyle.NONE:
+			return
+		PawnData.HairStyle.SHORT:
+			draw_arc(body_origin + Vector2(0.0, -0.2), body_radius - 0.4, PI * 1.05, PI * 1.95, 10, hair_c, 1.0, true)
+		PawnData.HairStyle.MOHAWK:
+			draw_line(body_origin + Vector2(0.0, -body_radius), body_origin + Vector2(0.0, body_radius * 0.2), hair_c, 1.1, true)
+		PawnData.HairStyle.BUN:
+			draw_circle(body_origin + Vector2(0.0, -body_radius - 0.75), 0.8, hair_c)
 
 
 func _play_sfx(path: String, pitch: float = 1.0) -> void:

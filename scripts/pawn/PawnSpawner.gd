@@ -29,6 +29,22 @@ const PAWN_COLORS: Array[Color] = [
 	Color("#ec407a"),  # pink
 ]
 
+const APPAREL_COLORS: Array[Color] = [
+	Color("#5d7ea8"),
+	Color("#6d9259"),
+	Color("#9d6f49"),
+	Color("#725e9a"),
+	Color("#aa5454"),
+]
+
+const HAIR_COLORS: Array[Color] = [
+	Color("#2b1e17"),
+	Color("#5f4630"),
+	Color("#9b6b3a"),
+	Color("#d5b06f"),
+	Color("#3f3128"),
+]
+
 const SPAWNABLE_BIOMES: Array[int] = [Biome.Type.PLAINS, Biome.Type.FOREST]
 
 @export var pawn_scene: PackedScene
@@ -112,6 +128,10 @@ func spawn_starters(world: World, required_component_id: int = -1) -> void:
 		data.gender = _rng.randi_range(0, 1)
 		data.tile_pos = tile
 		data.color = PAWN_COLORS[placed % PAWN_COLORS.size()]
+		data.body_type = _rng.randi_range(PawnData.BodyType.SLIM, PawnData.BodyType.BROAD)
+		data.hair_style = _rng.randi_range(PawnData.HairStyle.NONE, PawnData.HairStyle.BUN)
+		data.hair_color = HAIR_COLORS[_rng.randi_range(0, HAIR_COLORS.size() - 1)]
+		data.apparel_color = APPAREL_COLORS[_rng.randi_range(0, APPAREL_COLORS.size() - 1)]
 		
 		# Assign 0-2 random traits to this pawn
 		_assign_random_traits(data)

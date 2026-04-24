@@ -6,6 +6,8 @@ extends RefCounted
 ## truth and Pawn (the Node) as a visual representation.
 
 enum Gender { MALE, FEMALE, OTHER }
+enum BodyType { SLIM, AVERAGE, BROAD }
+enum HairStyle { NONE, SHORT, MOHAWK, BUN }
 
 ## Trainable proficiencies. Higher level -> faster work + more XP per tick on
 ## that skill type. Pawns earn XP only while doing the matching job.
@@ -36,6 +38,10 @@ var tile_pos: Vector2i = Vector2i.ZERO
 ## Display color used by the v1 circle renderer. Will be replaced by a sprite
 ## once we have pawn art. Kept on the data so it survives save/load.
 var color: Color = Color.WHITE
+var body_type: int = BodyType.AVERAGE
+var hair_style: int = HairStyle.SHORT
+var hair_color: Color = Color("#5f4630")
+var apparel_color: Color = Color("#5d7ea8")
 
 ## Needs (0..100, higher is better). Will decay on tick in Phase 2b.
 var hunger: float = 100.0
@@ -290,6 +296,10 @@ func to_save_dict() -> Dictionary:
 		"tile_x": tile_pos.x,
 		"tile_y": tile_pos.y,
 		"color": [color.r, color.g, color.b, color.a],
+		"body_type": body_type,
+		"hair_style": hair_style,
+		"hair_color": [hair_color.r, hair_color.g, hair_color.b, hair_color.a],
+		"apparel_color": [apparel_color.r, apparel_color.g, apparel_color.b, apparel_color.a],
 		"hunger": hunger,
 		"rest": rest,
 		"mood": mood,
@@ -318,6 +328,14 @@ static func from_save_dict(d: Dictionary) -> PawnData:
 	var c: Array = d.get("color", [1, 1, 1, 1])
 	if c.size() >= 3:
 		p.color = Color(float(c[0]), float(c[1]), float(c[2]), float(c[3]) if c.size() > 3 else 1.0)
+	p.body_type = int(d.get("body_type", BodyType.AVERAGE))
+	p.hair_style = int(d.get("hair_style", HairStyle.SHORT))
+	var hc: Array = d.get("hair_color", [0.37, 0.27, 0.18, 1.0])
+	if hc.size() >= 3:
+		p.hair_color = Color(float(hc[0]), float(hc[1]), float(hc[2]), float(hc[3]) if hc.size() > 3 else 1.0)
+	var ac: Array = d.get("apparel_color", [0.36, 0.49, 0.66, 1.0])
+	if ac.size() >= 3:
+		p.apparel_color = Color(float(ac[0]), float(ac[1]), float(ac[2]), float(ac[3]) if ac.size() > 3 else 1.0)
 	p.hunger = float(d.get("hunger", 100.0))
 	p.rest = float(d.get("rest", 100.0))
 	p.mood = float(d.get("mood", 100.0))
