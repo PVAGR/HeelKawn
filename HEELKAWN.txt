@@ -24,7 +24,45 @@ UI:  ColonyHUD, BuildToolbar, PawnInfoPanel
 WHERE WE LEFT OFF  (update this when status changes)
 ================================================================================
 
-Last updated: 2026-04-24 (Session 4 Complete)
+Last updated: 2026-04-24 (Session 5 Complete)
+
+Session 5 — Combat & Raiding (✓ COMPLETE):
+✅ Created Enemy.gd with three enemy types (Raider, Brigand, Warlord)
+✅ Enemy types: Varying speed, health, damage, vision range by type
+✅ Enemy pathfinding: Path toward target pawns using A* pathfinder
+✅ Enemy melee combat: Automatic attacks when in range of pawns
+✅ Created EnemySpawner.gd: Manages raid waves with difficulty scaling
+✅ Raid system: Raids spawn periodically (every 5 in-game days)
+✅ Difficulty scaling: Each raid 10% harder, more dangerous enemies
+✅ Spawn location: Enemies spawn on map edges, approach colony
+✅ Draft mode system: D key to toggle, click pawns to select for combat
+✅ Drafted pawns: Stop normal work, auto-engage nearby enemies
+✅ Combat positioning: Right-click to move drafted pawns to positions
+✅ Combat resolution: CombatResolver.gd with melee combat mechanics
+✅ Hit/miss system: 75% base hit, modified by skill and dodge
+✅ Damage calculation: Base 10 damage, scaled by health/skills
+✅ Injuries: 15% chance per hit to trigger STRESS mood event
+✅ Enemy death: Enemies drop loot (meat, wood, stone) on defeat
+✅ Pawn health reduction: Damage applies directly, triggers death checks
+✅ UI feedback: Combat messages, enemy status display
+
+Combat system mechanics:
+- Enemy accuracy bonus: +2% per skill level (capped 20-95%)
+- Enemy dodge chance: 20% base (modified by pawn rest stat)
+- Pawn combat skills: Hunting/Mining XP improves accuracy/damage
+- Damage scaling: Attacker health/rest * trait multipliers
+- Armor concept: Health provides passive damage reduction
+- Loot drops: 1-3 wood, 2-4 stone, 1-2 meat per enemy
+- Crisis cascade: Combat adds STRESS → crisis strikes possible
+- Social effects: Dead enemies don't trigger sorrow (outside colony)
+
+Draft mode workflow:
+- Enter: D key (disables work orders, enables combat)
+- Select: Click pawns to add/remove from combat group
+- Command: Right-click to path selected pawns to position
+- Exit: D key again (releases all pawns back to work)
+- Drafted pawns auto-engage enemies in 10px radius
+- Drafted pawns path toward enemies > 10px away
 
 Session 4 — Mood Events (✓ COMPLETE):
 ✅ Created MoodEvent.gd with 8 emotion types
@@ -55,25 +93,44 @@ Crisis level system:
 
 Session 5 — Combat & Raiding (⏳ NEXT):
 Goals:
-- Add enemy spawner (raiders, animals)
-- Implement draft mode (select pawns for combat)
-- Add combat resolution (melee, ranged)
-- Injury system tied to combat
-- Loot drops from defeated enemies
-- Retreat/surrender mechanics
+Session 6 — Pawn Visuals & Audio (⏳ NEXT):
+Goals:
+- Add pawn sprite variations (hair, body style, clothes colors)
+- Animation system (walking, working, eating, sleeping, combat)
+- Sound effects (footsteps, work sounds, damage, death)
+- Visual polish (status indicator icons, mood visual effects)
+- Draft mode visual feedback (selection highlight, movement indicator)
+- Enemy sprite variations (bandit outfits, armor appearance)
+
+Session 7 — Content & Variety (Following):
+- New jobs: Cooking, crafting, animal taming
+- New buildings: Kitchen, workshop, trade post
+- New food types: Meals, prepared food, luxury food
+- Animal taming: Convert wild animals to pets, breed for work
+- New biomes: Desert, swamp, mountain cave systems
+
+Session 8 — Polish & QoL (Following):
+- Job filters and work priorities UI
+- Pawn scheduler (work shifts, time off)
+- Mini-map and map zoom/pan
+- Performance optimization (pathing cache, job batching)
+- Bug fixes and balance pass
+
 
 Session 1-8 Roadmap:
 1: ✅ Death Mechanics (starvation, exhaustion, injury, mining hazards)
 2: ✅ Traits System (20 traits, multipliers, UI display)
 3: ✅ Animal AI (rabbits, deer, flocking, breeding, hunting)
 4: ✅ Mood Events (triggers, crises, feedback UI)
-5: 🔲 Combat & Raiding (enemies, draft mode, combat resolution)
-6: 🔲 Pawn Visuals & Audio (sprites, animations, SFX)
+5: ✅ Combat & Raiding (enemies, draft mode, combat resolution, loot)
+6: 🔲 Pawn Visuals & Audio (sprites, animations, SFX, polish)
 7: 🔲 Content & Variety (cooking/crafting jobs, new buildings)
 8: 🔲 Polish & QoL (filters, scheduler, mini-map, perf, bugs)
 
 Open / next:
-- Ready to begin Session 5 Combat & Raiding system.
+- Scene setup required: Add EnemySpawner node to Main.tscn (AnimalSpawner may already exist)
+- Test Sessions 3-5 in-game before moving to Session 6
+- Ready to begin Session 6 Pawn Visuals & Audio.
 
 Rules:
 - Main.DesignationMode and BuildToolbar MODE_* (0-4) must match.
