@@ -27,6 +27,7 @@ WHERE WE LEFT OFF  (update this when status changes)
 Last updated: 2026-04-24
 
 Recent:
+- GitHub remote: https://github.com/PVAGR/HeelKawn (origin, branch master)
 - Build/zone preview uses BuildPreviewOverlay (after World) so preview is visible.
 - Build toolbar: strong “selected” look for active tool; Save [F5] / Load [F8] in bar.
 
@@ -41,6 +42,7 @@ Rules:
 LOG (newest at top)
 ================================================================================
 
+2026-04-24  Created GitHub repo PVAGR/HeelKawn, added origin, pushed all commits.
 2026-04-24  Single handoff file HEELKAWN.txt only; rule points here; user asked
             for a text, read every session, update every project change.
 2026-04-24  HEELKAWN handoff + Cursor rule; BuildPreviewOverlay; toolbar save/
