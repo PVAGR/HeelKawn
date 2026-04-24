@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://heelkawn_pawn"]
+
+[ext_resource type="Script" path="res://scripts/pawn/Pawn.gd" id="1_pawn"]
+
+[node name="Pawn" type="Node2D"]
+z_index = 10
+script = ExtResource("1_pawn")

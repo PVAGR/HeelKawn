@@ -1,0 +1,39 @@
+[gd_scene load_steps=10 format=3 uid="uid://heelkawn_main"]
+
+[ext_resource type="Script" path="res://scenes/main/Main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scenes/main/BuildPreviewOverlay.gd" id="1_preview"]
+[ext_resource type="Script" path="res://scripts/camera/CameraController.gd" id="2_cam"]
+[ext_resource type="PackedScene" path="res://scenes/world/World.tscn" id="3_world"]
+[ext_resource type="Script" path="res://scripts/world/DayNightCycle.gd" id="4_day"]
+[ext_resource type="Script" path="res://scripts/pawn/PawnSpawner.gd" id="5_spawn"]
+[ext_resource type="PackedScene" path="res://scenes/pawn/Pawn.tscn" id="6_pawn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ColonyHUD.tscn" id="7_hud"]
+[ext_resource type="Script" path="res://scripts/ui/BuildToolbar.gd" id="8_toolbar"]
+[ext_resource type="Script" path="res://scripts/ui/PawnInfoPanel.gd" id="9_info"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="DayNight" type="CanvasModulate" parent="."]
+script = ExtResource("4_day")
+
+[node name="World" parent="." instance=ExtResource("3_world")]
+
+[node name="BuildPreviewOverlay" type="Node2D" parent="."]
+script = ExtResource("1_preview")
+
+[node name="PawnSpawner" type="Node" parent="."]
+script = ExtResource("5_spawn")
+pawn_scene = ExtResource("6_pawn")
+
+[node name="Camera" type="Camera2D" parent="."]
+zoom = Vector2(0.5, 0.5)
+script = ExtResource("2_cam")
+
+[node name="ColonyHUD" parent="." instance=ExtResource("7_hud")]
+
+[node name="BuildToolbar" type="CanvasLayer" parent="."]
+script = ExtResource("8_toolbar")
+
+[node name="PawnInfoPanel" type="CanvasLayer" parent="."]
+script = ExtResource("9_info")

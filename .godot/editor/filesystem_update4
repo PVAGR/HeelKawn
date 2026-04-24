@@ -1,0 +1,14 @@
+res://autoloads/GameManager.gd
+res://scenes/main/Main.gd
+res://scripts/pawn/Pawn.gd
+res://scripts/stockpile/Stockpile.gd
+res://scripts/ui/BuildToolbar.gd
+res://scripts/ui/ColonyHUD.gd
+res://scenes/world/World.gd
+res://scripts/pawn/PawnData.gd
+res://scripts/ui/PawnInfoPanel.gd
+res://scripts/pawn/PawnSpawner.gd
+res://scripts/world/DayNightCycle.gd
+res://scripts/world/WorldData.gd
+res://autoloads/JobManager.gd
+res://scripts/world/PathFinder.gd

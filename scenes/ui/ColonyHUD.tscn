@@ -1,0 +1,36 @@
+[gd_scene load_steps=2 format=3 uid="uid://heelkawn_colony_hud"]
+
+[ext_resource type="Script" path="res://scripts/ui/ColonyHUD.gd" id="1_hud"]
+
+[node name="ColonyHUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Panel" type="PanelContainer" parent="."]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 520.0
+offset_bottom = 78.0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="Body" type="RichTextLabel" parent="Panel/Margin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(500, 52)
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+mouse_filter = 2
+
+[node name="Hotkeys" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+modulate = Color(1, 1, 1, 0.45)
+mouse_filter = 2
+text = "SPACE pause · 1/2/3 speed · R reroll · T pawns · J jobs · I stockpile"
