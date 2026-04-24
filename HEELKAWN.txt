@@ -24,35 +24,48 @@ UI:  ColonyHUD, BuildToolbar, PawnInfoPanel
 WHERE WE LEFT OFF  (update this when status changes)
 ================================================================================
 
-Last updated: 2026-04-24 (Session 1 Complete)
+Last updated: 2026-04-24 (Session 2 Complete)
 
-Session 1 — Death Mechanics (✓ COMPLETE):
-✅ Implemented starvation death (hunger <= 0)
-✅ Implemented exhaustion death (rest <= 0)
-✅ Implemented injury death (health <= 0)
-✅ Added mining hazards: 2% base injury chance, scales with mining skill
-✅ Health damage range: 3-8 per injury, skilled miners take less
-✅ Death cleanup: releases job, frees bed, drops items to stockpile
-✅ Code: Pawn.gd _check_death_conditions(), _die(), _apply_work_hazards()
+Session 2 — Traits System (✓ COMPLETE):
+✅ Created Trait.gd with 20 unique trait types
+✅ Traits modify: hunger decay, rest decay, mood decay, health max, skill XP, work speed, injury chance, damage taken
+✅ Pawn data integrated with trait save/load serialization
+✅ Traits spawn with pawns at game start (0-2 random traits per pawn)
+✅ UI display in PawnInfoPanel showing pawn traits
+✅ Need decay multipliers applied each tick
+✅ Skill XP multipliers applied per work tick
+✅ Work speed multipliers applied in effective_labor_mult()
+✅ Mining hazards now scale with injury/damage traits
 
-Session 2 — Traits System (⏳ NEXT):
+Trait list (20 total):
+- Physical: Workhorse, Lazy, Tough, Frail
+- Mental: Quick Learner, Slow Learner, Focused, Easily Bored
+- Social: Optimist, Pessimist, Social, Loner
+- Hunger: Iron Stomach, Eats Like a Bird
+- Rest: Night Owl, Early Bird
+- Hazard: Unlucky, Lucky, Reckless, Cautious
+
+Session 3 — Animal AI (⏳ NEXT):
 Goals:
-- Define trait framework (10-15 base traits)
-- Spawn pawns with random traits
-- Traits modify: need decay multipliers, skill XP rate, work speed, mood threshold
-- UI: trait display on PawnInfoPanel
-- Examples: Workhorse (20% faster work, higher hunger), Lazy (30% slower), etc.
+- Add rabbits and deer to the world map (spawn at random locations)
+- Implement basic movement (random walk within territory)
+- Add simple flocking/herding behavior (animals attracted to each other)
+- Natural breeding/respawn system (reproduction when food available)
+- Hunting jobs: pawns with HUNT work enabled can hunt animals for meat
+- Animal corpses drop meat into nearby stockpile
 
-Session 3-8 Roadmap:
-3: Animal AI (rabbits/deer, flocking, breeding)
-4: Mood Events (mood triggers, crises, feedback UI)
-5: Combat & Raiding (enemies, draft mode, injuries, loot)
-6: Pawn Visuals & Audio (replace circles with sprites, animations, SFX)
-7: Content & Variety (cooking/crafting jobs, new buildings, 20+ traits)
-8: Polish & QoL (job filters, pawn scheduler, mini-map, perf, final bugs)
+Session 1-8 Roadmap:
+1: ✅ Death Mechanics (starvation, exhaustion, injury, mining hazards)
+2: ✅ Traits System (20 traits, multipliers, UI display)
+3: 🔲 Animal AI (rabbits, deer, flocking, breeding, hunting)
+4: 🔲 Mood Events (triggers, crises, feedback UI)
+5: 🔲 Combat & Raiding (enemies, draft mode, injuries, loot)
+6: 🔲 Pawn Visuals & Audio (sprites, animations, SFX)
+7: 🔲 Content & Variety (cooking/crafting jobs, new buildings, 20+ traits)
+8: 🔲 Polish & QoL (job filters, pawn scheduler, mini-map, perf, bugs)
 
 Open / next:
-- None blocking. Ready to begin Session 2 Traits System.
+- Ready to begin Session 3 Animal AI system.
 
 Rules:
 - Main.DesignationMode and BuildToolbar MODE_* (0-4) must match.
