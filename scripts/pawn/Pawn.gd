@@ -1,3 +1,14 @@
+	# Draft mode: skip normal jobs, just handle carried items and essential needs
+	if draft_mode:
+		# Still need to handle carrying and basic needs
+		if data.is_carrying():
+			_begin_haul_to_stockpile()
+			return
+		if _maybe_start_eating():
+			return
+		# Otherwise stay idle, waiting for movement commands
+		return
+	
 class_name Pawn
 extends Node2D
 
@@ -146,6 +157,8 @@ var _current_job: Job = null
 ## Set by Main when the player clicks this pawn. Drives the selection ring
 ## in _draw and unlocks the side info panel.
 var is_selected: bool = false
+## Set by Main when pawn is in draft mode (combat). Pawns stop working and respond to click-to-move orders.
+var draft_mode: bool = false
 
 ## Active path: list of tiles AFTER the current tile that must be visited in
 ## order. Empty means stationary.

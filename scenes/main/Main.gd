@@ -278,6 +278,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			JobManager.print_debug()
 		KEY_I:
 			_print_stockpile()
+		KEY_D:
+			_toggle_draft_mode()
 		KEY_B:
 			# Shift+B is the legacy "stamp 5 beds near the stockpile" shortcut,
 			# kept for quick demos. Plain B enters bed-designation mode.
@@ -580,7 +582,11 @@ func _handle_select_click_at(world_pos: Vector2) -> void:
 		if d_sq <= best_d_sq:
 			best = p
 			best_d_sq = d_sq
-	_set_selected_pawn(best)
+	
+	if _draft_mode_active and best != null:
+		_handle_draft_click(best)
+	else:
+		_set_selected_pawn(best)
 
 
 func _set_selected_pawn(p: Pawn) -> void:
@@ -1457,3 +1463,36 @@ func _on_enemy_tick(tick: int, spawner: EnemySpawner) -> void:
 		spawner.cleanup_dead_enemies()
 		if spawner.get_enemy_count() > 0 and tick % 100 == 0:
 			print("[Combat] %s" % spawner.describe())
+
+
+# ==================== draft mode (combat control) ====================
+
+func _toggle_draft_mode() -> void:
+	_draft_mode_active = not _draft_mode_active
+	if _draft_mode_active:
+		print("[Draft] DRAFT MODE ENABLED - Click pawns to select for combat (D to toggle)")
+	else:
+		print("[Draft] Draft mode disabled")
+		# Release all drafted pawns from draft mode
+		for pawn in _drafted_pawns:
+			if pawn != null and is_instance_valid(pawn):
+				pawn.draft_mode = false
+				pawn.queue_redraw()
+		_drafted_pawns.clear()
+
+
+func _handle_draft_click(pawn: Pawn) -> void:
+	if not _draft_mode_active or pawn == null:
+		return
+	
+	if pawn in _drafted_pawns:
+		# Remove from draft
+		_drafted_pawns.erase(pawn)
+		pawn.draft_mode = false
+		print("[Draft] %s undrafted" % pawn.data.display_name)
+	else:
+		# Add to draft
+		_drafted_pawns.append(pawn)
+		pawn.draft_mode = true
+		print("[Draft] %s drafted (now %d drafted)" % [pawn.data.display_name, _drafted_pawns.size()])
+	pawn.queue_redraw()
