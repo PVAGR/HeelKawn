@@ -581,12 +581,31 @@ func _tick_working() -> void:
 	_current_job.work_ticks_done += int(ceil(speed))
 	if _current_job.work_ticks_done >= _current_job.work_ticks_needed:
 		_complete_current_job()
+	# Mining and wall-mining are hazardous. Small chance of injury each tick.
+	_apply_work_hazards()
 
 
 func _tick_eating() -> void:
 	_eat_ticks_left -= 1
 	if _eat_ticks_left <= 0:
 		_finish_eating()
+
+
+func _apply_work_hazards() -> void:
+	if _current_job == null:
+		return
+	# Mining and wall-mining expose pawns to injury risk.
+	# Chance = 2% base, reduced by skill level (miners get safer as they level).
+	# Unskilled pawn (lvl 0): 2% per tick. Skilled (lvl 20): 0.2% per tick.
+	var hazard_chance: float = 0.0
+	if _current_job.type == Job.Type.MINE or _current_job.type == Job.Type.MINE_WALL:
+		var mining_level: int = data.get_skill_level(PawnData.Skill.MINING)
+		hazard_chance = 0.02 * max(0.1, 1.0 - (mining_level / 20.0))
+	if hazard_chance > 0.0 and randf() < hazard_chance:
+		var damage: float = randf_range(3.0, 8.0)  # 3-8 health per injury
+		data.health = max(0.0, data.health - damage)
+		print("[Pawn] %s injured while working  (damage=%.1f health=%.1f)" %
+			[data.display_name, damage, data.health])
 
 
 # ==================== jobs (FORAGE / MINE) ====================
@@ -1154,6 +1173,38 @@ func _decay_needs() -> void:
 		data.mood = min(100.0, data.mood + MOOD_GAIN_PER_TICK_CONTENT - MOOD_DECAY_PER_TICK)
 	else:
 		data.mood = max(0.0, data.mood - MOOD_DECAY_PER_TICK)
+	# Death from starvation, exhaustion, or injury
+	_check_death_conditions()
+
+
+func _check_death_conditions() -> void:
+	if data.hunger <= 0.0:
+		print("[Pawn] %s died of starvation  (hunger=%.1f)" % [data.display_name, data.hunger])
+		_die()
+		return
+	if data.rest <= 0.0:
+		print("[Pawn] %s died from exhaustion  (rest=%.1f)" % [data.display_name, data.rest])
+		_die()
+		return
+	if data.health <= 0.0:
+		print("[Pawn] %s died from injuries  (health=%.1f)" % [data.display_name, data.health])
+		_die()
+		return
+
+
+func _die() -> void:
+	# Release any held job and bed reservation
+	release_job_if_any()
+	_release_bed_if_reserved()
+	# Drop any carried items into the nearest stockpile
+	if data.is_carrying() and _world != null:
+		var sp: Stockpile = StockpileManager.find_drop_zone(data.carrying, data.tile_pos, _world.pathfinder)
+		if sp != null:
+			sp.add_item(data.carrying, data.carrying_qty)
+	data.clear_carry()
+	# Remove from groups and free the node
+	remove_from_group("pawns")
+	queue_free()
 
 
 func _check_thresholds() -> void:

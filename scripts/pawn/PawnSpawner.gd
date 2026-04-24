@@ -58,6 +58,14 @@ func clear_pawns() -> void:
 	pawns.clear()
 
 
+## Remove a pawn from the spawner (when it dies). Cleans up the reference.
+func remove_pawn(pawn: Pawn) -> void:
+	pawns.erase(pawn)
+	if pawn != null and is_instance_valid(pawn):
+		pawn.release_job_if_any()
+		pawn.queue_free()
+
+
 ## Dump a needs + skills table for all pawns. Hotkeyed to T by Main.gd.
 func print_stats() -> void:
 	print("[Stats] --- pawn needs (tick %d) ---" % GameManager.tick_count)
