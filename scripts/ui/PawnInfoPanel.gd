@@ -64,6 +64,8 @@ var _work_checkboxes: Dictionary = {}
 
 var _pawn: Pawn = null
 var _traits_label: Label = null
+var _mood_status_label: Label = null
+var _crisis_level_label: Label = null
 
 
 func _ready() -> void:
@@ -124,6 +126,14 @@ func _build_ui() -> void:
 	_traits_label = _make_label("", FONT_SMALL, TEXT_DIM)
 	_traits_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_root_vbox.add_child(_traits_label)
+
+	# mood status and crisis
+	_mood_status_label = _make_label("", FONT_SMALL, TEXT_DIM)
+	_mood_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_root_vbox.add_child(_mood_status_label)
+	
+	_crisis_level_label = _make_label("", FONT_SMALL, TEXT_DIM)
+	_root_vbox.add_child(_crisis_level_label)
 
 	_root_vbox.add_child(_make_section_header("Needs"))
 	for entry in NEED_BARS:
@@ -327,6 +337,31 @@ func _refresh() -> void:
 	_title_label.text = "%s  (age %d)" % [d.display_name, d.age]
 	_state_label.text = _pawn.describe_state()
 	_traits_label.text = "Traits: %s" % d.traits_display()
+	
+	# Mood status with active mood event
+	var active_mood_event: MoodEvent = d.get_active_mood_event()
+	if active_mood_event != null:
+		_mood_status_label.text = "Mood: %s (%d event: %s)" % [
+			d.mood_state_display(),
+			int(d.mood),
+			active_mood_event.description
+		]
+	else:
+		_mood_status_label.text = "Mood: %s (%d)" % [d.mood_state_display(), int(d.mood)]
+	
+	# Crisis level
+	var crisis: float = d.get_crisis_level()
+	var crisis_text: String = "Crisis: "
+	if crisis < 0.3:
+		crisis_text += "Low"
+	elif crisis < 0.6:
+		crisis_text += "Moderate"
+	elif crisis < 0.8:
+		crisis_text += "HIGH"
+	else:
+		crisis_text += "CRITICAL"
+	crisis_text += " (%.0f%%)" % (crisis * 100.0)
+	_crisis_level_label.text = crisis_text
 
 	for field in _need_bars:
 		var entry: Dictionary = _need_bars[field]

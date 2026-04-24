@@ -67,6 +67,10 @@ var work_build:  bool = true
 ## Each pawn starts with 0-2 traits at spawn.
 var traits: Array[Trait] = []
 
+## Mood events: temporary emotional states that affect mood decay and behavior.
+## Each event has a type, intensity, and duration.
+var mood_events: Array[MoodEvent] = []
+
 
 func _init() -> void:
 	id = _next_id
@@ -114,6 +118,75 @@ func traits_display() -> String:
 	for trait in traits:
 		names.append(trait.display_name)
 	return ", ".join(names)
+
+
+# ==================== mood events ====================
+
+## Add a mood event (e.g., joy, sorrow, stress) that affects mood temporarily.
+func add_mood_event(event_type: int, intensity: float = 50.0, duration_ticks: int = 300) -> void:
+	var event := MoodEvent.new(event_type, intensity, duration_ticks)
+	mood_events.append(event)
+
+
+## Get the total mood impact (delta per tick) from all active mood events.
+func get_mood_event_impact() -> float:
+	var total_impact: float = 0.0
+	for event in mood_events:
+		total_impact += event.mood_impact()
+	return total_impact
+
+
+## Process mood event decay. Returns true if there are any events left.
+func process_mood_events() -> bool:
+	var expired: Array[int] = []
+	for i in range(mood_events.size()):
+		if mood_events[i].decay_tick():
+			expired.append(i)
+	# Remove expired events in reverse order to avoid index issues
+	for i in expired.size() - 1 downto 0:
+		mood_events.remove_at(expired[i])
+	return not mood_events.is_empty()
+
+
+## Get current crisis level (0.0 = fine, 1.0 = collapse). Based on mood and recent events.
+func get_crisis_level() -> float:
+	var crisis: float = 0.0
+	# Mood directly contributes: low mood = high crisis
+	var mood_crisis: float = 1.0 - (clamp(mood, 0.0, 100.0) / 100.0)  # 0.0 at mood 100, 1.0 at mood 0
+	crisis += mood_crisis * 0.5
+	# Despair events spike crisis immediately
+	for event in mood_events:
+		if event.type == MoodEvent.Type.DESPAIR:
+			crisis += event.intensity / 100.0 * 0.5
+	return clamp(crisis, 0.0, 1.0)
+
+
+## Get the most recent significant mood event for UI display.
+func get_active_mood_event() -> MoodEvent:
+	if mood_events.is_empty():
+		return null
+	# Return the event with highest intensity
+	var best_event: MoodEvent = mood_events[0]
+	for event in mood_events:
+		if event.intensity > best_event.intensity:
+			best_event = event
+	return best_event
+
+
+## Get description of current mood state for UI.
+func mood_state_display() -> String:
+	if mood < 25.0:
+		return "CRITICAL DEPRESSION"
+	elif mood < 45.0:
+		return "Very unhappy"
+	elif mood < 60.0:
+		return "Unhappy"
+	elif mood < 75.0:
+		return "Content"
+	elif mood < 90.0:
+		return "Happy"
+	else:
+		return "ECSTATIC"
 
 
 # ==================== skills ====================

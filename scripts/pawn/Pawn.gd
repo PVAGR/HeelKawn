@@ -608,6 +608,8 @@ func _apply_work_hazards() -> void:
 		# Traits can reduce damage taken
 		damage *= data.get_trait_mult("damage_taken_mult")
 		data.health = max(0.0, data.health - damage)
+		# Trigger stress mood event from injury
+		data.add_mood_event(MoodEvent.Type.STRESS, 60.0, 300)
 		print("[Pawn] %s injured while working  (damage=%.1f health=%.1f)" %
 			[data.display_name, damage, data.health])
 
@@ -813,6 +815,16 @@ func _complete_current_job() -> void:
 				job.tile.x, job.tile.y, produced_qty])
 		Job.Type.BUILD_BED, Job.Type.BUILD_WALL, Job.Type.BUILD_DOOR:
 			_finish_build(job)
+	# Trigger mood event based on job type
+	match job.type:
+		Job.Type.HUNT:
+			data.add_mood_event(MoodEvent.Type.TRIUMPH, 80.0, 250)  # Hunting is thrilling
+		Job.Type.MINE, Job.Type.MINE_WALL:
+			data.add_mood_event(MoodEvent.Type.CONTENTMENT, 50.0, 200)  # Solid work
+		Job.Type.CHOP, Job.Type.FORAGE:
+			data.add_mood_event(MoodEvent.Type.CONTENTMENT, 40.0, 180)  # Basic harvesting
+		Job.Type.BUILD_BED, Job.Type.BUILD_WALL, Job.Type.BUILD_DOOR:
+			data.add_mood_event(MoodEvent.Type.JOY, 60.0, 220)  # Building feels productive
 	JobManager.complete(job)
 	_current_job = null
 	_state = State.IDLE   # reset before transitioning; _begin_haul will set it
@@ -1023,6 +1035,11 @@ func _finish_eating() -> void:
 				var gain: float = Item.hunger_restore(food_type)
 				data.hunger = min(100.0, data.hunger + gain)
 				data.mood = min(100.0, data.mood + MOOD_BONUS_ATE)
+				# Eating meat brings more joy than berries
+				if food_type == Item.Type.MEAT:
+					data.add_mood_event(MoodEvent.Type.JOY, 70.0, 200)
+				else:
+					data.add_mood_event(MoodEvent.Type.JOY, 40.0, 150)
 				# After eating, reset warning band so we don't re-log instantly.
 				_hunger_level = _level_for(data.hunger)
 				print("[Pawn] %s ate 1 %s  (+%.0f hunger -> %.1f, mood %.1f)" % [
@@ -1176,15 +1193,39 @@ func _decay_needs() -> void:
 	else:
 		data.hunger = max(0.0, data.hunger - HUNGER_DECAY_PER_TICK * hunger_mult)
 		data.rest   = max(0.0, data.rest   - REST_DECAY_PER_TICK * rest_mult)
+	
 	# Mood: net loss when needs aren't met, net gain when they are.
 	# Passive contentment outpaces decay, so a pawn whose hunger AND rest are
 	# both comfortable will recover happiness on their own.
+	# Mood events also contribute their own delta.
+	data.process_mood_events()
+	var mood_event_impact: float = data.get_mood_event_impact()
+	
 	if data.hunger >= MOOD_CONTENT_FLOOR and data.rest >= MOOD_CONTENT_FLOOR:
-		data.mood = min(100.0, data.mood + MOOD_GAIN_PER_TICK_CONTENT - MOOD_DECAY_PER_TICK * mood_mult)
+		data.mood = min(100.0, data.mood + MOOD_GAIN_PER_TICK_CONTENT - MOOD_DECAY_PER_TICK * mood_mult + mood_event_impact)
 	else:
-		data.mood = max(0.0, data.mood - MOOD_DECAY_PER_TICK * mood_mult)
+		data.mood = max(0.0, data.mood - MOOD_DECAY_PER_TICK * mood_mult + mood_event_impact)
+	
+	# Crisis behavior: very low mood causes pawns to refuse work (strike)
+	var crisis_level: float = data.get_crisis_level()
+	if crisis_level > 0.8 and randf() < 0.05:  # 5% chance per tick to strike when desperate
+		_trigger_crisis_strike()
+	
 	# Death from starvation, exhaustion, or injury
 	_check_death_conditions()
+
+
+## Crisis strike: pawn refuses to work when mood is critical.
+func _trigger_crisis_strike() -> void:
+	# Release current job and enter idle state
+	if _current_job != null:
+		_unclaim_current_job()
+	_state = State.IDLE
+	# Add DESPAIR mood event
+	if not data.has_trait(Trait.Type.PESSIMIST):  # Pessimists expect this already
+		data.add_mood_event(MoodEvent.Type.DESPAIR, 75.0, 400)
+	print("[Pawn] %s is on strike due to critical morale (mood=%.1f)" % 
+		[data.display_name, data.mood])
 
 
 func _check_death_conditions() -> void:
@@ -1212,9 +1253,25 @@ func _die() -> void:
 		if sp != null:
 			sp.add_item(data.carrying, data.carrying_qty)
 	data.clear_carry()
+	
+	# Trigger sorrow in nearby pawns who witness the death
+	_trigger_sorrow_in_nearby_pawns()
+	
 	# Remove from groups and free the node
 	remove_from_group("pawns")
 	queue_free()
+
+
+## Nearby pawns get SORROW mood event when they witness death.
+func _trigger_sorrow_in_nearby_pawns() -> void:
+	var nearby_distance: float = 50.0  # pixels
+	for pawn in get_tree().get_nodes_in_group("pawns"):
+		if pawn == self or not is_instance_valid(pawn):
+			continue
+		var dist: float = position.distance_to(pawn.position)
+		if dist < nearby_distance:
+			pawn.data.add_mood_event(MoodEvent.Type.SORROW, 70.0, 500)
+			print("[Pawn] %s mourns %s's death" % [pawn.data.display_name, data.display_name])
 
 
 func _check_thresholds() -> void:
