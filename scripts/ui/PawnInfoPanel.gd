@@ -64,6 +64,7 @@ var _work_checkboxes: Dictionary = {}
 
 var _pawn: Pawn = null
 var _traits_label: Label = null
+var _appearance_label: Label = null
 var _mood_status_label: Label = null
 var _crisis_level_label: Label = null
 
@@ -126,6 +127,10 @@ func _build_ui() -> void:
 	_traits_label = _make_label("", FONT_SMALL, TEXT_DIM)
 	_traits_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_root_vbox.add_child(_traits_label)
+
+	_appearance_label = _make_label("", FONT_SMALL, TEXT_DIM)
+	_appearance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_root_vbox.add_child(_appearance_label)
 
 	# mood status and crisis
 	_mood_status_label = _make_label("", FONT_SMALL, TEXT_DIM)
@@ -337,6 +342,7 @@ func _refresh() -> void:
 	_title_label.text = "%s  (age %d)" % [d.display_name, d.age]
 	_state_label.text = _pawn.describe_state()
 	_traits_label.text = "Traits: %s" % d.traits_display()
+	_appearance_label.text = "Appearance: %s, %s" % [_body_type_label(d.body_type), _hair_style_label(d.hair_style)]
 	
 	# Mood status with active mood event
 	var active_mood_event: MoodEvent = d.get_active_mood_event()
@@ -400,3 +406,25 @@ func _refresh() -> void:
 
 	# Reposition each tick because the panel can grow/shrink with carry text.
 	_reposition()
+
+
+static func _body_type_label(body_type: int) -> String:
+	match body_type:
+		PawnData.BodyType.SLIM:
+			return "Slim"
+		PawnData.BodyType.BROAD:
+			return "Broad"
+		_:
+			return "Average"
+
+
+static func _hair_style_label(hair_style: int) -> String:
+	match hair_style:
+		PawnData.HairStyle.NONE:
+			return "No hair"
+		PawnData.HairStyle.MOHAWK:
+			return "Mohawk"
+		PawnData.HairStyle.BUN:
+			return "Bun"
+		_:
+			return "Short hair"

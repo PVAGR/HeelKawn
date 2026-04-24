@@ -12,3 +12,6 @@ res://scripts/world/DayNightCycle.gd
 res://scripts/world/WorldData.gd
 res://autoloads/JobManager.gd
 res://scripts/world/PathFinder.gd
+res://scripts/combat/Enemy.gd
+res://scripts/combat/EnemySpawner.gd
+res://scripts/pawn/MoodEvent.gd

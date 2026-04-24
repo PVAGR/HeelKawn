@@ -52,9 +52,10 @@ func post(type: int, tile: Vector2i, priority: int = 0, work_ticks: int = 20) ->
 func claim_next_for(
 		pawn: Pawn, filter: Callable = Callable(), priority_bonus: Callable = Callable()
 	) -> Job:
-	if _open.is_empty() or pawn == null or pawn.data == null:
+	var pd: PawnData = pawn.get_pawn_data() if pawn != null else null
+	if _open.is_empty() or pawn == null or pd == null:
 		return null
-	var pawn_tile: Vector2i = pawn.data.tile_pos
+	var pawn_tile: Vector2i = pd.tile_pos
 	var best_idx: int = -1
 	var best_eff: int = -0x7FFFFFFF
 	var best_dist: int = 0x7FFFFFFF
@@ -193,7 +194,7 @@ func print_debug(max_rows: int = 10) -> void:
 	for j in _claimed:
 		if shown >= max_rows * 2:
 			break
-		var who := j.assigned_pawn.data.display_name if (j.assigned_pawn and j.assigned_pawn.data) else "?"
+		var who: String = j.assigned_pawn.get_pawn_name_for_log() if j.assigned_pawn else "?"
 		print("[Jobs]   %s  <- %s" % [j.describe(), who])
 		shown += 1
 

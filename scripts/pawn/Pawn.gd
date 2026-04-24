@@ -191,6 +191,17 @@ var _last_haul_fail_log_tick: int = -HAUL_FAIL_LOG_EVERY_N_TICKS
 var _anim_t: float = 0.0
 var _sfx: AudioStreamPlayer2D = null
 
+## Autoloads (e.g. JobManager) should call these instead of `pawn.data` — the
+## parser can fail to resolve the `data` member on class_name Pawn in autoload scripts.
+func get_pawn_data() -> PawnData:
+	return data
+
+
+func get_pawn_name_for_log() -> String:
+	if data == null:
+		return "?"
+	return data.display_name
+
 
 func _ready() -> void:
 	GameManager.game_tick.connect(_on_game_tick)

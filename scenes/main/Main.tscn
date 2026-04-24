@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://heelkawn_main"]
+[gd_scene load_steps=12 format=3 uid="uid://heelkawn_main"]
 
 [ext_resource type="Script" path="res://scenes/main/Main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/main/BuildPreviewOverlay.gd" id="1_preview"]
@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/ColonyHUD.tscn" id="7_hud"]
 [ext_resource type="Script" path="res://scripts/ui/BuildToolbar.gd" id="8_toolbar"]
 [ext_resource type="Script" path="res://scripts/ui/PawnInfoPanel.gd" id="9_info"]
+[ext_resource type="Script" path="res://scripts/pawn/AnimalSpawner.gd" id="10_animal_spawn"]
+[ext_resource type="Script" path="res://scripts/combat/EnemySpawner.gd" id="11_enemy_spawn"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -25,6 +27,12 @@ script = ExtResource("1_preview")
 [node name="PawnSpawner" type="Node" parent="."]
 script = ExtResource("5_spawn")
 pawn_scene = ExtResource("6_pawn")
+
+[node name="AnimalSpawner" type="Node" parent="."]
+script = ExtResource("10_animal_spawn")
+
+[node name="EnemySpawner" type="Node" parent="."]
+script = ExtResource("11_enemy_spawn")
 
 [node name="Camera" type="Camera2D" parent="."]
 zoom = Vector2(0.5, 0.5)

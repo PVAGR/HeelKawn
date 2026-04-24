@@ -97,7 +97,7 @@ func _physics_process(delta: float) -> void:
 	
 	# Check if reached tile
 	if position.distance_to(target_world) < spec.size * 2:
-		tile_pos = _world.tile_to_world_inv(target_world)
+		tile_pos = _world.world_to_tile(target_world)
 		position = target_world
 		if not _current_path.is_empty() and _path_index < _current_path.size():
 			_path_index += 1
@@ -123,7 +123,7 @@ func _on_game_tick(_tick: int) -> void:
 			_attack_pawn(_target_pawn)
 		else:
 			# Path to target
-			var target_tile: Vector2i = _world.tile_to_world_inv(_target_pawn.position)
+			var target_tile: Vector2i = _world.world_to_tile(_target_pawn.position)
 			_current_path = _world.pathfinder.find_path(tile_pos, target_tile)
 			_path_index = 0
 	else:

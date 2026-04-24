@@ -24,7 +24,7 @@ UI:  ColonyHUD, BuildToolbar, PawnInfoPanel
 WHERE WE LEFT OFF  (update this when status changes)
 ================================================================================
 
-Last updated: 2026-04-23 (Session 6 Part 1)
+Last updated: 2026-04-24 (stability pass)
 
 Session 6 — Pawn Visuals & Audio (🟡 IN PROGRESS):
 ✅ Repaired Pawn.gd structure after combat merge corruption
@@ -40,6 +40,7 @@ Session 6 — Pawn Visuals & Audio (🟡 IN PROGRESS):
 ✅ PawnSpawner now randomizes appearance at spawn
 ✅ Pawn renderer now draws apparel ring + hair variants
 ✅ Appearance fields persist through save/load
+✅ PawnInfoPanel now shows appearance summary (body + hair)
 
 Session 6 remaining:
 - Add sprite-sheet pawn art pipeline (replace circle renderer when assets exist)
@@ -161,12 +162,18 @@ Rules:
 LOG (newest at top)
 ================================================================================
 
+2026-04-24  Parser/runtime fixes: JobManager use Pawn.get_pawn_data() / get_pawn_name_for_log()
+            (autoloads cannot parse pawn.data on class_name Pawn). Main.tscn: add AnimalSpawner
+            + EnemySpawner nodes (Main.gd referenced missing nodes). Enemy.gd: use world_to_tile
+            (tile_to_world_inv did not exist on World). Project should run without that parse error.
 2026-04-24  Added GIT_TROUBLESHOOTING.txt; ran gh auth setup-git so Git uses GitHub
             login (helps when IDE push fails). If push still fails, read that file.
 2026-04-23  Session 6 Part 1: fixed Pawn merge corruption, improved pawn/enemy
             visuals (health/mood/draft markers), and added safe SFX hooks.
 2026-04-23  Session 6 Part 2: added randomized pawn appearance variants and
             save/load persistence (body, hair, apparel).
+2026-04-23  Session 6 Part 3: PawnInfoPanel now displays appearance metadata
+            for easier visual playtest verification.
 2026-04-24  Created GitHub repo PVAGR/HeelKawn, added origin, pushed all commits.
 2026-04-24  Single handoff file HEELKAWN.txt only; rule points here; user asked
             for a text, read every session, update every project change.
